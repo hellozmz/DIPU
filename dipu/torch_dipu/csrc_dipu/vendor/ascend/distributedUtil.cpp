@@ -15,9 +15,10 @@ class AscendDistributedUtil : public distributedUtil {
         inputs[0].scalar_type() == at::kByte) {
       DIPUStreamGuard guard(comms[0]->diclStream_.unwrap());
       outputs[0] = inputs[0].to(at::kInt);
-      std::std::cout << "come into process pre" << std::endl;
+      std::cout << "come into process pre" << std::endl;
     }
-                                std::cout << "come into AscendDistributedUtil allreducePreFn impl." << std::endl;
+    std::cout << "come into AscendDistributedUtil allreducePreFn impl."
+              << std::endl;
   }
 
   void allreducePostFn(std::vector<std::shared_ptr<DICLComm>>& comms,
@@ -26,9 +27,10 @@ class AscendDistributedUtil : public distributedUtil {
     if (inputs[0].scalar_type() != outputs[0].scalar_type()) {
       DIPUStreamGuard guard(comms[0]->diclStream_.unwrap());
       outputs[0].copy_(inputs[0]);
-      std::std::cout << "come into process post" << std::endl;
+      std::cout << "come into process post" << std::endl;
     }
-                                std::cout << "come into AscendDistributedUtil allreducePostFn impl." << std::endl;
+    std::cout << "come into AscendDistributedUtil allreducePostFn impl."
+              << std::endl;
   }
 };
 
