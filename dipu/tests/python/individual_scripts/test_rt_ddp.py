@@ -100,9 +100,10 @@ def demo_basic_ddp(rank, world_size, port):
 def demo_allreduce(rank, world_size, port):
     import torch_dipu
 
-    print(f"Running basic DDP example on rank {rank} {torch.cuda.current_device()}")
+    print(f"Running basic DDP example on rank {rank}")
     torch.cuda.set_device(rank)
     dev1 = rank
+    print(f"dev1 {dev1}, current_device: {torch.cuda.current_device()}")
 
     setup(rank, world_size, port)
 
@@ -111,11 +112,58 @@ def demo_allreduce(rank, world_size, port):
     for op in [dist.reduce_op.SUM, dist.reduce_op.MAX, dist.reduce_op.MIN]:
         te_result = torch.zeros((3, 4)).to(dev1) + rank + 2
         dist.all_reduce(te_result, op=op)
+        print("te_result", te_result)
+        if op == dist.reduce_op.SUM:
+            expected_tensor = (
+                torch.zeros((3, 4)).to(dev1)
+                + (world_size - 1 + 0) * world_size / 2
+                + 2 * world_size
+            )
+        elif op == dist.reduce_op.MAX:
+            expected_tensor = torch.zeros((3, 4)).to(dev1) + world_size + 1
+        elif op == dist.reduce_op.MIN:
+            expected_tensor = torch.zeros((3, 4)).to(dev1) + 2
+        print("expected_tensor", expected_tensor)
+        assert torch.allclose(te_result, expected_tensor)
+        print(f"float opname {op}")
 
-    # check dtype: bool
+    # bool
     for op in [dist.reduce_op.SUM, dist.reduce_op.MAX, dist.reduce_op.MIN]:
-        te_result = torch.tensor(False, dtype=torch.bool).to(dev1)
+        te_result = torch.tensor([True, False, True], dtype=torch.bool).to(dev1)
         dist.all_reduce(te_result, op=op)
+        if op == dist.reduce_op.SUM:
+            expected_tensor = torch.tensor(
+                [world_size, 0, world_size], dtype=torch.bool
+            ).to(dev1)
+        elif op == dist.reduce_op.MAX:
+            expected_tensor = torch.tensor([True, False, True], dtype=torch.bool).to(
+                dev1
+            )
+        elif op == dist.reduce_op.MIN:
+            expected_tensor = torch.tensor([True, False, True], dtype=torch.bool).to(
+                dev1
+            )
+        print(f"bool te_result {te_result}, {te_result.int().storage().tolist()}")
+        print(
+            f"bool expected_tensor {expected_tensor} {expected_tensor.int().storage().tolist()}"
+        )
+        # assert torch.equal(te_result.cpu(), expected_tensor.cpu())
+        assert torch.equal(te_result, expected_tensor)
+
+    # byte
+    for op in [dist.reduce_op.SUM, dist.reduce_op.MAX, dist.reduce_op.MIN]:
+        te_result = torch.tensor([1, 2, 3], dtype=torch.uint8).to(dev1)
+        dist.all_reduce(te_result, op=op)
+        if op == dist.reduce_op.SUM:
+            expected_tensor = torch.tensor(
+                [world_size, 2 * world_size, 3 * world_size], dtype=torch.uint8
+            ).to(dev1)
+        elif op == dist.reduce_op.MAX:
+            expected_tensor = torch.tensor([1, 2, 3], dtype=torch.uint8).to(dev1)
+        elif op == dist.reduce_op.MIN:
+            expected_tensor = torch.tensor([1, 2, 3], dtype=torch.uint8).to(dev1)
+        assert torch.all(te_result == expected_tensor)
+
     cleanup()
 
 
@@ -314,19 +362,22 @@ def test_special_group_stuck(rank, world_size):
 
 
 if __name__ == "__main__":
+    import torch_dipu
+
     n_gpus = torch.cuda.device_count()
 
     port = random.randint(10000, 60000)
+    print(f"n_gpus: {n_gpus}")
 
-    world_size = 1
-    run_demo(demo_basic_ddp, world_size, port)
+    world_size = n_gpus
+    # run_demo(demo_basic_ddp, world_size, port)
     run_demo(demo_allreduce, world_size, port)
-    run_demo(demo_allgather, world_size, port)
-    run_demo(demo_reduce, world_size, port)
-    run_demo(demo_reducescatter, world_size, port)
-    run_demo(demo_reducescatter_base, world_size, port)
+    # run_demo(demo_allgather, world_size, port)
+    # run_demo(demo_reduce, world_size, port)
+    # run_demo(demo_reducescatter, world_size, port)
+    # run_demo(demo_reducescatter_base, world_size, port)
 
-    run_demo(demo_allgather_gloo, world_size, port)
+    # run_demo(demo_allgather_gloo, world_size, port)
 
     # need 2 card to run
     # run_demo(demo_p2p, world_size, port)

@@ -473,7 +473,8 @@ c10::intrusive_ptr<Work> ProcessGroupDICL::allreduce(
     std::vector<at::Tensor>& tensors, const AllreduceOptions& opts) {
   // inplace in = out, every rank use both in&out.
   checkDeviceTensors(tensors);
-  std::vector<at::Tensor> tensors_cp{tensors[0]};
+  std::vector<at::Tensor> tensors_cp{tensors};
+  std::cout << "tensors_cp.sizes()=" << tensors_cp.sizes() << std:endl;
   return collective(
       tensors_cp, tensors_cp,
       [&](at::Tensor& input, at::Tensor& output, diclComm_t comm,
