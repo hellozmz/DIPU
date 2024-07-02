@@ -32,8 +32,13 @@ function build_dipu_without_diopi() {
 function build_all() {
     echo "building dipu_lib:$(pwd)"
     echo "DIOPI_ROOT:${DIOPI_ROOT}"
+    # export CFLAGS="-fsanitize=address -g $CFLAGS"
+    # export CXXFLAGS="-fsanitize=address -g $CXXFLAGS"
+    # export LDFLAGS="-fsanitize=address $LDFLAGS"
+    export CFLAGS="-g $CFLAGS"
+    export CXXFLAGS="-g $CXXFLAGS"
     config_all_ascend_cmake 2>&1 | tee ./build1.log
-    cd build && make -j8 2>&1 | tee ./build1.log && cd ..
+    cd build && make -j64 2>&1 | tee ./build1.log && cd ..
 }
 
 case $1 in

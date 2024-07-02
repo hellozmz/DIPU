@@ -2,6 +2,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 #include <utility>
 
 #include "csrc_dipu/runtime/devproxy/deviceproxy.h"
@@ -17,14 +18,17 @@ namespace dipu {
 class DIPU_API DIPUEvent {
  public:
   // Constructors
-  // Default value for `flags` is specified below
   DIPUEvent() = default;
 
-  // add flags in future
-  // DIPUEvent(unsigned int flags) : flags_{flags} {}
-
   // dipu do not support IpcEventHandle until now
-
+  /*
+  ~DIPUEvent() {
+    if (isCreated()) {
+      DIPUGuard guard(device_index_);
+      devproxy::destroyEvent(event_);
+    }
+  }
+  */
   ~DIPUEvent() {
     try {
       if (isCreated()) {
@@ -38,8 +42,21 @@ class DIPU_API DIPUEvent {
   DIPUEvent(const DIPUEvent&) = delete;
   DIPUEvent& operator=(const DIPUEvent&) = delete;
 
-  DIPUEvent(DIPUEvent&& other) noexcept = default;
+    DIPUEvent(DIPUEvent&& other) noexcept = default;
   DIPUEvent& operator=(DIPUEvent&& other) noexcept = default;
+  /*
+  DIPUEvent(DIPUEvent&& other) noexcept { *this = std::move(other); }
+
+  DIPUEvent& operator=(DIPUEvent&& other) noexcept {
+    if (this != &other) {
+      device_index_ = other.device_index_;
+      stream_id_ = other.stream_id_;
+      event_ = other.event_;
+      other.event_ = nullptr;
+    }
+    return *this;
+  }
+  */
 
   explicit operator deviceEvent_t() const { return rawevent(); }
 
@@ -54,6 +71,7 @@ class DIPU_API DIPUEvent {
 
   bool isCreated() const { return event_ != nullptr; }
   c10::DeviceIndex device_index() const { return device_index_; }
+  c10::StreamId stream_id() const { std::cout << "stream_id_: " << stream_id_ << std::endl; return stream_id_; }
   deviceEvent_t rawevent() const { return event_; }
 
   bool query() const {
@@ -68,7 +86,7 @@ class DIPU_API DIPUEvent {
   void record() { record(getCurrentDIPUStream()); }
 
   void recordOnce(const DIPUStream& stream) {
-    if (!was_recorded_) {
+    if (-1 == stream_id_) {
       record(stream);
     }
   }
@@ -82,7 +100,8 @@ class DIPU_API DIPUEvent {
                 stream.device_index(), ".");
     DIPUGuard guard(device_index_);
     devproxy::recordEvent(event_, stream.rawstream());
-    was_recorded_ = true;
+    stream_id_ = stream.id();
+    std::cout << "record stream_id_ : " << stream_id_ << std::endl;
   }
 
   void wait(const DIPUStream& stream) {
@@ -110,9 +129,8 @@ class DIPU_API DIPUEvent {
   // dipu do not support IpcEventHandle until now
 
  private:
-  unsigned int flags_ = 0;
-  bool was_recorded_ = false;
   c10::DeviceIndex device_index_ = -1;
+  c10::StreamId stream_id_ = -1;
   deviceEvent_t event_ = nullptr;
 
   void createEvent(c10::DeviceIndex device_index) {
