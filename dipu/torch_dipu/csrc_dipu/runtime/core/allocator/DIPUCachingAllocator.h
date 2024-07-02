@@ -251,7 +251,7 @@ c10::Allocator* get_allocator(int device_id, c10::Allocator* raw_allocator) {
         raw_allocator;                                                        \
     using AsyncMemPool =                                                      \
         AsyncResourcePoolImpl<std::tuple<void*, size_t>,                      \
-                              at::DeviceType::device_type, algorithm>;        \
+                              at::DeviceType::device_type, priority /*algorithm*/>;        \
     static const std::function<c10::Allocator*(int)> allocator_get_fn =       \
         std::bind(                                                            \
             allocator_details::get_allocator<CachingAllocator, AsyncMemPool>, \

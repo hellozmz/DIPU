@@ -20,7 +20,7 @@ namespace dipu {
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::mutex DIPURawDeviceAllocator::mutex_;
 
-constexpr size_t kDefaultMaxAsyncResourcePoolLength = 96;
+constexpr size_t kDefaultMaxAsyncResourcePoolLength = 64 /* 96 */;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 const size_t kMaxAsyncResourcePoolLength = get_env_or_default(
     "DIPU_MAX_ASYNC_RESOURCE_POOL_LENGTH", kDefaultMaxAsyncResourcePoolLength);
@@ -157,6 +157,19 @@ c10::Allocator* getAllocator(const c10::Device& device) {
 }
 
 c10::Allocator* getAllocator(c10::DeviceType device_type) {
+    auto currentStream = getCurrentDIPUStream();
+    auto defaultStream = getDefaultDIPUStream();
+    DIPUEvent event;
+    if (currentStream != defaultStream) {
+      // When allocating memory to a non-default stream, since record_stream is
+      // not performed on the default stream, the non-default stream needs to
+      // wait for the operation on the default stream to be completed. After
+      // adding non-default stream and other default stream operations here, the
+      // upper layer does not need to manually add a wait for the default stream
+      // when allocating memory on the non-default stream.
+      event.record(defaultStream);
+      event.wait(currentStream);
+    }
   return getAllocator(c10::Device(device_type));
 }
 

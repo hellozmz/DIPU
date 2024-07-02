@@ -20,17 +20,30 @@ class DIPU_API DIPUEvent {
   DIPUEvent() = default;
 
   // dipu do not support IpcEventHandle until now
-
+  /*
   ~DIPUEvent() {
     if (isCreated()) {
       DIPUGuard guard(device_index_);
       devproxy::destroyEvent(event_);
     }
   }
+  */
+  ~DIPUEvent() {
+    try {
+      if (isCreated()) {
+        DIPUGuard guard(device_index_);
+        devproxy::destroyEvent(event_);
+      }
+    } catch (...) { /* No throw */
+    }
+  }
 
   DIPUEvent(const DIPUEvent&) = delete;
   DIPUEvent& operator=(const DIPUEvent&) = delete;
 
+    DIPUEvent(DIPUEvent&& other) noexcept = default;
+  DIPUEvent& operator=(DIPUEvent&& other) noexcept = default;
+  /*
   DIPUEvent(DIPUEvent&& other) noexcept { *this = std::move(other); }
 
   DIPUEvent& operator=(DIPUEvent&& other) noexcept {
@@ -42,6 +55,7 @@ class DIPU_API DIPUEvent {
     }
     return *this;
   }
+  */
 
   explicit operator deviceEvent_t() const { return rawevent(); }
 
