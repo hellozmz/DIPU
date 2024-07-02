@@ -2,6 +2,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 #include <utility>
 
 #include "csrc_dipu/runtime/devproxy/deviceproxy.h"
@@ -70,7 +71,7 @@ class DIPU_API DIPUEvent {
 
   bool isCreated() const { return event_ != nullptr; }
   c10::DeviceIndex device_index() const { return device_index_; }
-  c10::StreamId stream_id() const { return stream_id_; }
+  c10::StreamId stream_id() const { std::cout << "stream_id_: " << stream_id_ << std::endl; return stream_id_; }
   deviceEvent_t rawevent() const { return event_; }
 
   bool query() const {
@@ -100,6 +101,7 @@ class DIPU_API DIPUEvent {
     DIPUGuard guard(device_index_);
     devproxy::recordEvent(event_, stream.rawstream());
     stream_id_ = stream.id();
+    std::cout << "record stream_id_ : " << stream_id_ << std::endl;
   }
 
   void wait(const DIPUStream& stream) {

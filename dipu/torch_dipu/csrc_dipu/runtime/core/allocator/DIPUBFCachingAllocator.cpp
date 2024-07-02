@@ -612,8 +612,8 @@ static void deleteBFContext(void* ptr) {
 // TODO(allocator) - Refactor it!
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables,modernize-avoid-bind)
 DIPU_REGISTER_ALLOCATOR(BF, DIPU_DEVICE_TYPE_MACRO, BFCachingAllocator,
-                        OneStreamOneQueueAlgo, 0);
-DIPU_REGISTER_ALLOCATOR(BF, CPU, BFCachingAllocator, OneStreamOneQueueAlgo, 0);
+                        0 /* OneStreamOneQueueAlgo*/ , 0);
+DIPU_REGISTER_ALLOCATOR(BF, CPU, BFCachingAllocator, 0 /* OneStreamOneQueueAlgo */, 0);
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables,modernize-avoid-bind)
 
 }  // namespace dipu
