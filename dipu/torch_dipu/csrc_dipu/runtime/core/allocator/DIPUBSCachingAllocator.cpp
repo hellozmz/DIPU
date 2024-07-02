@@ -233,8 +233,8 @@ static void deleteBSContext(void* ptr) {
 // TODO(allocator) - Refactor it!
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables,modernize-avoid-bind)
 DIPU_REGISTER_ALLOCATOR(BS, DIPU_DEVICE_TYPE_MACRO, BSCachingAllocator,
-                        OneStreamOneQueueAlgo, 0);
-DIPU_REGISTER_ALLOCATOR(BS, CPU, BSCachingAllocator, OneStreamOneQueueAlgo, 0);
+                        0 /*OneStreamOneQueueAlgo*/, 0);
+DIPU_REGISTER_ALLOCATOR(BS, CPU, BSCachingAllocator, 0 /*OneStreamOneQueueAlgo*/, 0);
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables,modernize-avoid-bind)
 
 }  // namespace dipu

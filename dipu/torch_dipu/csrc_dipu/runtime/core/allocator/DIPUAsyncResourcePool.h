@@ -74,7 +74,7 @@ class AsyncResourcePoolImpl : public AsyncResourcePool<T> {
     return list_.size();
   }
 };
-
+/*
 #define OneStreamOneQueueAlgo 1
 
 // This implementation provides a separate queue for each stream
@@ -197,5 +197,5 @@ class AsyncResourcePoolImpl<T, device_type, OneStreamOneQueueAlgo>
     return total_size;
   }
 };
-
+*/
 }  // namespace dipu
